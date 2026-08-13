@@ -31,7 +31,7 @@ export async function registerFcmToken(): Promise<string | null> {
     return null;
   }
 
-  if (!VAPID_KEY || VAPID_KEY === 'BP2P34sudwaAbxTAJrcITSQcsmj_HPefoBAllXQ9pqVRI3p76qL_hOk597Y_v5ISQvLXP-nUpIPyTcc6qowsw2I') {
+  if (!VAPID_KEY) {
     console.warn('VAPID_KEY not configured in lib/firebase-messaging.ts — skipping FCM registration.');
     return null;
   }
