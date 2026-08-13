@@ -39,6 +39,31 @@ import {
   getDateOffset,
 } from '../data/initialData';
 
+// Sends a real push notification (via the Netlify function + Firebase Admin)
+// to every device token a user has registered. Reaches the device even if
+// the app/tab is completely closed, same as WhatsApp/Instagram. Safe no-op
+// if the user has no saved tokens yet (e.g. never granted push permission).
+async function sendPushToUser(
+  user: User | undefined,
+  title: string,
+  body: string,
+  link?: string
+) {
+  const tokens = user?.fcmTokens || [];
+  for (const token of tokens) {
+    fetch('/.netlify/functions/send-push-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fcmToken: token,
+        title,
+        body,
+        data: link ? { link } : undefined,
+      }),
+    }).catch((err) => console.warn('Push send failed (non-fatal):', err));
+  }
+}
+
 interface AppContextType {
   currentUser: User | null;
   allUsers: User[];
@@ -407,6 +432,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         targetRole: 'staff',
         linkModule: 'attendance',
       });
+
+      // Real push to each present worker's phone, even if their app is closed.
+      workerIds.forEach((wId) => {
+        const worker = workers.find((w) => w.id === wId);
+        sendPushToUser(
+          worker,
+          'Attendance Marked',
+          `You were marked present for ${date}.`,
+          'https://brintha-workers.netlify.app/attendance'
+        );
+      });
     }
   };
 
@@ -438,6 +474,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         targetUserId: workerId,
         linkModule: 'payroll',
       });
+
+      sendPushToUser(
+        worker,
+        'Advance Issued',
+        `${settings.currency}${amount} advance recorded (${reason}).`,
+        'https://brintha-workers.netlify.app/payroll'
+      );
     }
   };
 
@@ -484,6 +527,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         targetUserId: workerId,
         linkModule: 'payroll',
       });
+
+      // Real push — reaches the worker's phone even if the app is closed.
+      sendPushToUser(
+        worker,
+        'Salary Payment Cleared',
+        `${settings.currency}${amount} payment cleared via ${paymentMode}.`,
+        'https://brintha-workers.netlify.app/payroll'
+      );
     }
   };
 

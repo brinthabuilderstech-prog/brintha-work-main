@@ -23,6 +23,7 @@ export interface User {
   phone: string;
   password?: string;
   role: UserRole;
+  fcmTokens?: string[];
   trade?: TradeType;
   dailyRate?: number;
   site?: string;
