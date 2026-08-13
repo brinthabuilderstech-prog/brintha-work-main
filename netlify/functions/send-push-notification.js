@@ -21,7 +21,12 @@
 // NOTE: This file uses ES Module import/export syntax (not require/exports)
 // because the project's package.json has "type": "module" set at the root.
 
-import admin from 'firebase-admin';
+// firebase-admin is a CommonJS package. When bundled as an ES module by
+// Netlify's bundler, "import admin from 'firebase-admin'" can end up
+// wrapping the real module under a nested .default — so we import the
+// whole namespace and unwrap it defensively instead.
+import * as firebaseAdminPkg from 'firebase-admin';
+const admin = firebaseAdminPkg.default || firebaseAdminPkg;
 
 // Initialize Firebase Admin only once (Netlify functions can be reused
 // between invocations, so guard against re-initializing)
