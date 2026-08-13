@@ -115,15 +115,15 @@ export default async function handler(req, res) {
       messageId,
     });
 
-  } catch (error) {
-    console.error('FCM send error:', error);
+  }  catch (error) {
+  console.error('FCM send error full:', error); // add this
 
-    return res.status(500).json({
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Failed to send push notification',
-    });
-  }
+  return res.status(500).json({
+    success: false,
+    error:
+      error instanceof Error
+        ? error.message
+        : 'Failed to send push notification',
+  });
+}
 }
