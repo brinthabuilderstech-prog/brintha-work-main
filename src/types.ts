@@ -79,8 +79,8 @@ export interface AppNotification {
   type: NotificationType;
   timestamp: string;
   read: boolean;
-  targetRole: 'all' | 'staff' | UserRole;
-  targetUserId?: string; // if set, only this specific user (plus staff) sees the notification
+  targetRole: 'admin' | 'supervisor' | 'worker' | 'staff' | 'all';
+  targetUserId?: string;  // For worker-specific messages
   linkModule?: string;
 }
 
