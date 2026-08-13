@@ -1,3 +1,30 @@
+// --- Firebase Messaging setup (merged into the same SW that handles caching) ---
+importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: 'AIzaSyDIG4K6H2iJiVy2eg4lDwhPtvVTskyj--w',
+  authDomain: 'brintha-workers-b9fb5.firebaseapp.com',
+  projectId: 'brintha-workers-b9fb5',
+  storageBucket: 'brintha-workers-b9fb5.firebasestorage.app',
+  messagingSenderId: '145436088092',
+  appId: '1:145436088092:web:0c1dc362c1976f4fc48cd9',
+});
+
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  const title = payload.notification?.title || payload.data?.title || 'LaborTrack';
+  const body = payload.notification?.body || payload.data?.body || '';
+
+  self.registration.showNotification(title, {
+    body,
+    icon: '/logo.png',
+    badge: '/logo.png',
+  });
+});
+
+// --- Your existing offline-caching logic (unchanged) ---
 const CACHE_NAME = 'labortrack-v1.0.0';
 const STATIC_ASSETS = [
   '/',
@@ -7,7 +34,6 @@ const STATIC_ASSETS = [
   '/offline.html'
 ];
 
-// Install Event
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -19,7 +45,6 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate Event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -35,10 +60,9 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event - Stale while revalidate / Network first with fallback
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  
+
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
