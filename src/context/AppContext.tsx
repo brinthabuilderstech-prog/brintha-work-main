@@ -51,7 +51,7 @@ async function sendPushToUser(
 ) {
   const tokens = user?.fcmTokens || [];
   for (const token of tokens) {
-    fetch('/.netlify/functions/send-push-notification', {
+    fetch('/api/send-push-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
