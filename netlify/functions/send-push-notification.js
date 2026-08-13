@@ -21,19 +21,19 @@
 // NOTE: This file uses ES Module import/export syntax (not require/exports)
 // because the project's package.json has "type": "module" set at the root.
 
-// firebase-admin is a CommonJS package. When bundled as an ES module by
-// Netlify's bundler, "import admin from 'firebase-admin'" can end up
-// wrapping the real module under a nested .default — so we import the
-// whole namespace and unwrap it defensively instead.
-import * as firebaseAdminPkg from 'firebase-admin';
-const admin = firebaseAdminPkg.default || firebaseAdminPkg;
+// firebase-admin ships modern, ESM-native subpath exports as of v9+.
+// Using these directly (instead of the old "import admin from 'firebase-admin'"
+// default-export style) avoids the CJS/ESM interop wrapping issues that were
+// causing "Cannot read properties of undefined (reading 'length')".
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
 
 // Initialize Firebase Admin only once (Netlify functions can be reused
 // between invocations, so guard against re-initializing)
-if (!admin.apps.length) {
+if (!getApps().length) {
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+  initializeApp({
+    credential: cert(serviceAccount),
   });
 }
 
@@ -75,7 +75,7 @@ export const handler = async (event) => {
       data: data || {},
     };
 
-    const response = await admin.messaging().send(message);
+    const response = await getMessaging().send(message);
 
     return {
       statusCode: 200,
