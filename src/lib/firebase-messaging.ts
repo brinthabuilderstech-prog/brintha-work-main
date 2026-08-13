@@ -22,7 +22,7 @@ import { app } from './firebase';
 
 // Replace with the "Web Push certificate" key pair from Firebase Console ->
 // Project Settings -> Cloud Messaging -> Web configuration.
-const VAPID_KEY = 'REPLACE_WITH_YOUR_VAPID_KEY';
+const VAPID_KEY = 'BP2P34sudwaAbxTAJrcITSQcsmj_HPefoBAllXQ9pqVRI3p76qL_hOk597Y_v5ISQvLXP-nUpIPyTcc6qowsw2I';
 
 export async function registerFcmToken(): Promise<string | null> {
   const supported = await isSupported().catch(() => false);
@@ -31,7 +31,7 @@ export async function registerFcmToken(): Promise<string | null> {
     return null;
   }
 
-  if (!VAPID_KEY || VAPID_KEY === 'REPLACE_WITH_YOUR_VAPID_KEY') {
+  if (!VAPID_KEY || VAPID_KEY === 'BP2P34sudwaAbxTAJrcITSQcsmj_HPefoBAllXQ9pqVRI3p76qL_hOk597Y_v5ISQvLXP-nUpIPyTcc6qowsw2I') {
     console.warn('VAPID_KEY not configured in lib/firebase-messaging.ts — skipping FCM registration.');
     return null;
   }
