@@ -440,7 +440,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           worker,
           'Attendance Marked',
           `You were marked present for ${date}.`,
-          'https://brintha-workers.netlify.app/attendance'
+          'https://brintha-work-main.vercel.app/attendance'
         );
       });
     }
@@ -468,7 +468,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const workerName = worker ? worker.name : 'Worker';
       addNotification({
         title: 'Advance Issued',
-        message: `${settings.currency}${amount} advance recorded for ${workerName} (${reason}).`,
+        message: `${settings.currency}${amount} advance recorded for ${workerName}...`,
         type: 'payment',
         targetRole: 'staff',
         targetUserId: workerId,
@@ -479,7 +479,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         worker,
         'Advance Issued',
         `${settings.currency}${amount} advance recorded (${reason}).`,
-        'https://brintha-workers.netlify.app/payroll'
+        'https://brintha-work-main.vercel.app/payroll'
       );
     }
   };
@@ -533,7 +533,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         worker,
         'Salary Payment Cleared',
         `${settings.currency}${amount} payment cleared via ${paymentMode}.`,
-        'https://brintha-workers.netlify.app/payroll'
+        'https://brintha-work-main.vercel.app/payroll'
       );
     }
   };
@@ -801,13 +801,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const canSeeNotification = (n: AppNotification): boolean => {
-    if (n.targetRole === 'all') return true;
-    const isStaff = currentUser?.role === 'admin' || currentUser?.role === 'supervisor';
-    if (n.targetRole === 'staff') {
-      if (isStaff) return true;
-      return !!n.targetUserId && n.targetUserId === currentUser?.id;
+    if (!currentUser) return false;
+
+    const role = currentUser.role;
+
+    // ADMIN: See everything
+    if (role === 'admin') {
+      return true;
     }
-    return n.targetRole === currentUser?.role;
+
+    // SUPERVISOR: Attendance + Payments + Workers + System
+    if (role === 'supervisor') {
+      if (
+        n.type === 'attendance' ||
+        n.type === 'payment' ||
+        n.type === 'worker' ||
+        n.type === 'system'
+      ) {
+        return true;
+      }
+      return false;
+    }
+
+    // WORKER: Only own payments + system announcements
+    if (role === 'worker') {
+      if (n.type === 'payment' && n.targetUserId === currentUser.id) {
+        return true;
+      }
+      if (n.type === 'system' && n.targetRole === 'all') {
+        return true;
+      }
+      return false;
+    }
+
+    return false;
   };
 
   const unreadNotifCount = notifications.filter((n) => !n.read && canSeeNotification(n)).length;
