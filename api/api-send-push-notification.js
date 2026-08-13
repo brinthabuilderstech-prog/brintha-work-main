@@ -1,24 +1,29 @@
 // api/send-push-notification.js
 //
-// Vercel-compatible version of the Netlify function.
-// Same logic, adapted to Vercel's (req, res) handler signature.
+// Vercel serverless function — sends a real push notification via Firebase
+// Admin SDK, the same mechanism WhatsApp/Instagram use server-side. Reaches
+// the device even if the app/tab is completely closed.
 //
-// SETUP REQUIRED (same as before):
+// HOW IT'S TRIGGERED:
+// Called from AppContext.tsx (fetch to /api/send-push-notification) whenever
+// a real event happens — attendance marked, payment cleared, advance issued.
+//
+// SETUP REQUIRED:
 // 1. Firebase Console -> Project Settings -> Service Accounts ->
-//    "Generate new private key" — this downloads a JSON file.
+//    "Generate new private key" — downloads a JSON file.
 // 2. In Vercel: Project Settings -> Environment Variables, add:
 //      FIREBASE_SERVICE_ACCOUNT_KEY = <paste the entire JSON file content as one line>
-// 3. npm install firebase-admin --save (in your project root, if not already installed)
+//    (Add it for Production, Preview, and Development environments.)
+// 3. npm install firebase-admin --save (already installed from Netlify setup)
 // 4. Deploy.
 //
-// NOTE: File must live at /api/send-push-notification.js (Vercel's convention —
-// any file under /api automatically becomes an endpoint at /api/<filename>).
+// Uses firebase-admin's modular subpath imports (firebase-admin/app,
+// firebase-admin/messaging) since these are proper ESM exports and avoid
+// the CJS/ESM interop wrapping issues the old default-export style had.
 
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
 
-// Initialize Firebase Admin only once (serverless functions can be reused
-// between invocations, so guard against re-initializing)
 if (!getApps().length) {
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
   initializeApp({
@@ -28,12 +33,11 @@ if (!getApps().length) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    // Vercel automatically parses JSON bodies into req.body — no need to
-    // JSON.parse(event.body) like on Netlify.
     const { fcmToken, title, body, data } = req.body;
 
     if (!fcmToken || !title || !body) {
@@ -64,6 +68,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, messageId: response });
   } catch (err) {
     console.error('Push send failed:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message, code: err.code || null });
   }
 }
