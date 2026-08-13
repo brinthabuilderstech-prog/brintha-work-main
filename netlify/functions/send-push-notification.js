@@ -17,8 +17,11 @@
 //      FIREBASE_SERVICE_ACCOUNT_KEY  = <paste the entire JSON file content as one line>
 // 3. npm install firebase-admin --save (in your project root)
 // 4. Deploy.
+//
+// NOTE: This file uses ES Module import/export syntax (not require/exports)
+// because the project's package.json has "type": "module" set at the root.
 
-const admin = require('firebase-admin');
+import admin from 'firebase-admin';
 
 // Initialize Firebase Admin only once (Netlify functions can be reused
 // between invocations, so guard against re-initializing)
@@ -29,7 +32,7 @@ if (!admin.apps.length) {
   });
 }
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
