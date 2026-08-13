@@ -1,0 +1,81 @@
+rules_version = '2';
+
+// ============================================================================
+// IMPORTANT — READ BEFORE DEPLOYING
+// ============================================================================
+// This app currently authenticates users with a custom phone/password check
+// done entirely in client-side JavaScript (see login() in AppContext.tsx).
+// It does NOT use Firebase Authentication. That means Firestore has no way
+// to know who is making a request — request.auth is always null here.
+//
+// As a result, these rules CANNOT enforce "only admins can delete workers"
+// or "workers can only see their own payroll" at the database level. Anyone
+// who can read your Firebase config (which is already public in your
+// deployed frontend bundle, by design) can currently read and write every
+// document in this database directly, bypassing your app's UI entirely —
+// including phone numbers, daily rates, and payment records.
+//
+// What these rules DO give you right now: basic schema shape validation,
+// and a single deploy that is safer than Firestore's default test-mode
+// rules (which allow completely open access with no checks at all, and
+// which expire and lock out everyone after 30 days).
+//
+// To get REAL per-role security, migrate to Firebase Authentication
+// (Phone Auth fits this app well, since you already use phone numbers as
+// the login identifier). Once every user has a real Firebase Auth UID,
+// these rules can be tightened to check request.auth.uid against each
+// user's role stored in their own users/{uid} document.
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['id', 'name', 'phone', 'role'])
+                   && request.resource.data.role in ['admin', 'supervisor', 'worker'];
+    }
+
+    match /attendance/{recordId} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['id', 'workerId', 'date', 'status'])
+                   && request.resource.data.status in ['present', 'half_day', 'absent', 'unmarked'];
+    }
+
+    match /advances/{recordId} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['id', 'workerId', 'amount', 'reason', 'date', 'status'])
+                   && request.resource.data.amount is number
+                   && request.resource.data.amount >= 0;
+    }
+
+    match /payments/{recordId} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['id', 'workerId', 'amount', 'date', 'paymentMode'])
+                   && request.resource.data.amount is number
+                   && request.resource.data.amount >= 0
+                   && request.resource.data.paymentMode in ['Cash', 'UPI', 'Bank Transfer'];
+    }
+
+    match /notifications/{notifId} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['id', 'title', 'message', 'type', 'targetRole']);
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Used only by testFirebaseConnection() in lib/firebase.ts
+    match /test/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Deny anything not explicitly matched above
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

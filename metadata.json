@@ -1,0 +1,6 @@
+{
+  "name": "Brintha Builders",
+  "description": "Brintha Builders - Site Labour Attendance & Payroll Management System with multi-role access, advance tracking, weekly summaries, and PWA offline support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,119 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user in Brintha Builders system (admin, supervisor, worker)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 20 },
+        "password": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["admin", "supervisor", "worker"] },
+        "trade": { "type": "string", "maxLength": 50 },
+        "dailyRate": { "type": "number" },
+        "site": { "type": "string", "maxLength": 100 },
+        "avatar": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["id", "name", "phone", "role"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Daily attendance record for a site worker",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workerId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 10 },
+        "status": { "type": "string", "enum": ["present", "half_day", "absent", "unmarked"] },
+        "markedBy": { "type": "string", "maxLength": 100 },
+        "timestamp": { "type": "string", "maxLength": 30 }
+      },
+      "required": ["id", "workerId", "date", "status"]
+    },
+    "AdvanceRecord": {
+      "title": "AdvanceRecord",
+      "description": "Advance cash payment given to a worker",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workerId": { "type": "string", "maxLength": 128 },
+        "amount": { "type": "number" },
+        "reason": { "type": "string", "maxLength": 250 },
+        "date": { "type": "string", "maxLength": 10 },
+        "status": { "type": "string", "enum": ["active", "deducted"] }
+      },
+      "required": ["id", "workerId", "amount", "date", "status"]
+    },
+    "PaymentRecord": {
+      "title": "PaymentRecord",
+      "description": "Cleared wage payment to a worker",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workerId": { "type": "string", "maxLength": 128 },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "maxLength": 10 },
+        "paymentMode": { "type": "string", "enum": ["Cash", "UPI", "Bank Transfer"] },
+        "notes": { "type": "string", "maxLength": 250 },
+        "clearedBy": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["id", "workerId", "amount", "date", "paymentMode"]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "Global or site settings",
+      "type": "object",
+      "properties": {
+        "theme": { "type": "string", "enum": ["construction", "light", "dark", "emerald"] },
+        "attendanceNotifs": { "type": "boolean" },
+        "paymentNotifs": { "type": "boolean" },
+        "newWorkerNotifs": { "type": "boolean" },
+        "language": { "type": "string", "enum": ["en", "hi", "ta"] },
+        "currency": { "type": "string", "maxLength": 10 }
+      }
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "System or site notification alert",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 150 },
+        "message": { "type": "string", "maxLength": 500 },
+        "type": { "type": "string", "enum": ["attendance", "payment", "worker", "system"] },
+        "timestamp": { "type": "string", "maxLength": 40 },
+        "read": { "type": "boolean" },
+        "targetRole": { "type": "string", "maxLength": 50 },
+        "linkModule": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "title", "message", "type", "timestamp", "read"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile collection"
+    },
+    "/attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/AttendanceRecord" },
+      "description": "Daily attendance collection"
+    },
+    "/advances/{advanceId}": {
+      "schema": { "$ref": "#/entities/AdvanceRecord" },
+      "description": "Worker advances collection"
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/PaymentRecord" },
+      "description": "Worker wage payment settlements collection"
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/AppSettings" },
+      "description": "System settings configuration document"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/AppNotification" },
+      "description": "System and site notification alerts collection"
+    }
+  }
+}

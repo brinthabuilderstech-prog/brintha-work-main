@@ -1,0 +1,9 @@
+[build]
+  functions = "netlify/functions"
+  # Adjust "publish" and "command" below to match your existing build setup
+  # if you already have a netlify.toml — don't duplicate the [build] block.
+  # publish = "dist"
+  # command = "npm run build"
+
+[functions]
+  node_bundler = "esbuild"
