@@ -33,6 +33,13 @@ function getFirebaseAdminApp() {
   });
 }
 
+// FCM error codes that mean "this token is dead, stop sending to it"
+const STALE_TOKEN_CODES = new Set([
+  'messaging/registration-token-not-registered',
+  'messaging/invalid-registration-token',
+  'messaging/invalid-argument', // sometimes thrown for malformed/expired tokens too
+]);
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
@@ -111,7 +118,30 @@ export default async function handler(req, res) {
 
     console.log('Sending FCM message...');
 
-    const messageId = await getMessaging(app).send(message);
+    let messageId;
+    try {
+      messageId = await getMessaging(app).send(message);
+    } catch (sendError) {
+      const code = sendError?.errorInfo?.code || sendError?.code;
+
+      if (STALE_TOKEN_CODES.has(code)) {
+        console.warn('FCM token is stale/unregistered, skipping:', fcmToken);
+
+        // TODO: remove fcmToken from your DB here, e.g.:
+        // await removeFcmTokenFromDB(fcmToken);
+
+        // Not a server error — the request was handled correctly,
+        // the recipient just can't be reached anymore.
+        return res.status(200).json({
+          success: false,
+          error: 'NotRegistered',
+          staleToken: true,
+        });
+      }
+
+      // Any other FCM error is unexpected — rethrow to outer catch
+      throw sendError;
+    }
 
     console.log('FCM message sent:', messageId);
 
