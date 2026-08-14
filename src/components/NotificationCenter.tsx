@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { sendTestNotification } from '../lib/send-notification';
 import { useApp } from '../context/AppContext';
 import {
   Bell,
@@ -217,6 +218,24 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
         </div>
 
         {/* Footer Link to Notification Settings */}
+        <div className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col gap-2">
+  <button
+    onClick={() => {
+      setActiveTab('settings');
+      onClose();
+    }}
+    className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-md transition text-center shadow-xs"
+  >
+    Manage Preferences in Settings
+  </button>
+
+  <button
+    onClick={sendTestNotification}
+    className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-md transition text-center shadow-xs"
+  >
+    Send test push notification
+  </button>
+</div>
         <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <button
             onClick={() => {
